@@ -112,7 +112,7 @@ public class PaymentSettlementService {
                                         userId,
                                         amountToDebit,
                                         TransactionType.CHARGING_PAYMENT,
-                                        String.format("Auto-net debit for charging session %s (cost %.0f - deposit %.0f)",
+                                        String.format("Trừ tiền tự động cho phiên sạc %s (chi phí %.0f - tiền cọc %.0f)",
                                                 session.getSessionId(), cost, deposit),
                                         booking.getId(),
                                         session.getSessionId()
@@ -134,7 +134,7 @@ public class PaymentSettlementService {
                         }
                     } else {
                         // Cost <= deposit → Always COMPLETED and refund if needed
-                        log.info("💰 [Settlement] Cost <= Deposit - Payment COMPLETED, checking refund...");
+                        log.info("[Settlement] Cost <= Deposit - Payment COMPLETED, checking refund...");
 
                         payment.setStatus(PaymentStatus.COMPLETED);
                         payment.setPaidAt(LocalDateTime.now());
@@ -150,7 +150,7 @@ public class PaymentSettlementService {
                                     userId,
                                     refund,
                                     TransactionType.BOOKING_DEPOSIT_REFUND,
-                                    String.format("Deposit refund %.0f VND for booking #%d (session %s)",
+                                    String.format("Hoàn tiền cọc %.0f VND cho booking #%d (phiên %s)",
                                             refund, booking.getId(), session.getSessionId()),
                                     null,
                                     null,
@@ -184,7 +184,7 @@ public class PaymentSettlementService {
                                     userId,
                                     (double) cost,
                                     TransactionType.CHARGING_PAYMENT,
-                                    String.format("Auto wallet payment for session %s", session.getSessionId()),
+                                    String.format("Thanh toán tự động từ ví cho phiên %s", session.getSessionId()),
                                     null,
                                     session.getSessionId()
                             );

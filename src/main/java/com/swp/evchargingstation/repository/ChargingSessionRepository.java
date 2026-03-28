@@ -246,6 +246,18 @@ public interface ChargingSessionRepository extends JpaRepository<ChargingSession
     // ========== STAFF DASHBOARD QUERIES ==========
 
     /**
+     * Fetch ChargingSession with Driver and User eagerly for email sending
+     * Prevents lazy loading issues in async operations
+     */
+    @Query("SELECT cs FROM ChargingSession cs " +
+           "LEFT JOIN FETCH cs.driver d " +
+           "LEFT JOIN FETCH d.user " +
+           "LEFT JOIN FETCH cs.chargingPoint cp " +
+           "LEFT JOIN FETCH cp.station " +
+           "WHERE cs.sessionId = :sessionId")
+    java.util.Optional<ChargingSession> findByIdWithUserEager(@Param("sessionId") String sessionId);
+
+    /**
      * Lấy sessions của một trạm trong khoảng thời gian
      */
     @Query("SELECT cs FROM ChargingSession cs " +

@@ -5,6 +5,7 @@ import com.swp.evchargingstation.entity.Driver;
 import com.swp.evchargingstation.entity.Payment;
 import com.swp.evchargingstation.entity.Plan;
 import com.swp.evchargingstation.entity.User;
+import com.swp.evchargingstation.repository.ChargingSessionRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.AccessLevel;
@@ -16,6 +17,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -28,6 +31,7 @@ import java.util.Locale;
 public class EmailService {
 
     final JavaMailSender mailSender;
+    final ChargingSessionRepository chargingSessionRepository;
 
     @Value("${mail.from}")
     String fromEmail;
@@ -35,43 +39,56 @@ public class EmailService {
     final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm, dd/MM/yyyy");
     final NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, ChargingSessionRepository chargingSessionRepository) {
         this.mailSender = mailSender;
+        this.chargingSessionRepository = chargingSessionRepository;
     }
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public void sendChargingStartEmail(ChargingSession session) {
         try {
-            User user = session.getDriver().getUser();
+            // Refetch session with eager loading to prevent lazy loading issues
+            ChargingSession freshSession = chargingSessionRepository
+                    .findByIdWithUserEager(session.getSessionId())
+                    .orElse(session);
+
+            User user = freshSession.getDriver().getUser();
             if (user == null || user.getEmail() == null) {
-                log.warn("Cannot send email: User or email is null for session {}", session.getSessionId());
+                log.warn("Cannot send email: User or email is null for session {}", freshSession.getSessionId());
                 return;
             }
 
             String subject = "Phiên sạc của bạn đã bắt đầu";
-            String htmlContent = buildChargingStartEmailTemplate(session);
+            String htmlContent = buildChargingStartEmailTemplate(freshSession);
 
             sendHtmlEmail(user.getEmail(), subject, htmlContent);
-            log.info("Sent charging start email to {} for session {}", user.getEmail(), session.getSessionId());
+            log.info("Sent charging start email to {} for session {}", user.getEmail(), freshSession.getSessionId());
         } catch (Exception e) {
             log.error("Failed to send charging start email for session {}: {}", session.getSessionId(), e.getMessage(), e);
         }
     }
 
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public void sendChargingCompleteEmail(ChargingSession session) {
         try {
-            User user = session.getDriver().getUser();
+            // Refetch session with eager loading to prevent lazy loading issues
+            ChargingSession freshSession = chargingSessionRepository
+                    .findByIdWithUserEager(session.getSessionId())
+                    .orElse(session);
+
+            User user = freshSession.getDriver().getUser();
             if (user == null || user.getEmail() == null) {
-                log.warn("Cannot send email: User or email is null for session {}", session.getSessionId());
+                log.warn("Cannot send email: User or email is null for session {}", freshSession.getSessionId());
                 return;
             }
 
             String subject = "Phiên sạc của bạn đã hoàn tất";
-            String htmlContent = buildChargingCompleteEmailTemplate(session);
+            String htmlContent = buildChargingCompleteEmailTemplate(freshSession);
 
             sendHtmlEmail(user.getEmail(), subject, htmlContent);
-            log.info("Sent charging complete email to {} for session {}", user.getEmail(), session.getSessionId());
+            log.info("Sent charging complete email to {} for session {}", user.getEmail(), freshSession.getSessionId());
         } catch (Exception e) {
             log.error("Failed to send charging complete email for session {}: {}", session.getSessionId(), e.getMessage(), e);
         }

@@ -22,23 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * ĐƠN GIẢN HÓA: Charging Simulator với cơ chế flag-based stop + Spring Events
- *
- * Nguyên tắc:
- * 1. Scheduler chỉ UPDATE session nếu status = IN_PROGRESS
- * 2. Stop thủ công = Đổi status thành COMPLETED ngay lập tức
- * 3. Scheduler thấy status != IN_PROGRESS → bỏ qua
- * 4. Không có transaction lồng nhau, không có REQUIRES_NEW
- * 5. Mỗi operation độc lập, transaction ngắn
- * 6. ✅ Side effects (email, payment) được handle bởi event listeners
- *
- * Refactor với Spring Events:
- * - ✅ REMOVED: EmailService, PaymentSettlementService (tight coupling)
- * - ✅ ADDED: ApplicationEventPublisher (loose coupling)
- * - ✅ Transaction duration giảm từ ~500ms → ~100ms
- * - ✅ Email và payment không block main flow
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -52,7 +35,7 @@ public class ChargingSimulatorService {
     BookingRepository bookingRepository;
     WalletService walletService;
 
-    // ✅ Spring Events: Thay thế EmailService và PaymentSettlementService
+    // Spring Events: Thay thế EmailService và PaymentSettlementService
     ApplicationEventPublisher eventPublisher;
 
     // Track sessions being processed to avoid concurrent updates
@@ -146,7 +129,7 @@ public class ChargingSimulatorService {
                        + (session.getDurationMin() * plan.getPricePerMinute());
             session.setCostTotal(cost);
 
-            // ⚡ AUTO-STOP: Check insufficient funds - Ngắt sạc tự động khi hết tiền
+            // AUTO-STOP: Check insufficient funds - Ngắt sạc tự động khi hết tiền
             try {
                 String userId = session.getDriver().getUserId();
                 double walletBalance = walletService.getBalance(userId);
@@ -215,7 +198,7 @@ public class ChargingSimulatorService {
                     //     }).start();
                     // }
 
-                    log.warn("❌ Insufficient funds for session {}: Balance {} < Cost {}",
+                    log.warn("Insufficient funds for session {}: Balance {} < Cost {}",
                             sessionId, balanceCopy, costCopy);
 
                     return; // Exit ngay không tiếp tục
@@ -328,23 +311,23 @@ public class ChargingSimulatorService {
         // Lưu session
         chargingSessionRepository.save(session);
 
-        log.info("✅ Session {} completed: SOC {}%, Energy {} kWh, Cost {} VND",
+        log.info("Session {} completed: SOC {}%, Energy {} kWh, Cost {} VND",
             sessionId, session.getEndSocPercent(), session.getEnergyKwh(), session.getCostTotal());
 
-        // ===== ✅ PUBLISH EVENT FOR SIDE EFFECTS =====
+        // ===== PUBLISH EVENT FOR SIDE EFFECTS =====
         // Transaction commits here → Fast! (~100ms)
         // Side effects (payment, email) được xử lý bởi event listeners
         try {
             eventPublisher.publishEvent(
                 new ChargingSessionCompletedEvent(this, session)
             );
-            log.info("📢 [Event] Published ChargingSessionCompletedEvent for session {}", sessionId);
+            log.info("[Event] Published ChargingSessionCompletedEvent for session {}", sessionId);
         } catch (Exception ex) {
-            log.error("❌ [Event] Failed to publish ChargingSessionCompletedEvent for session {}: {}",
+            log.error("[Event] Failed to publish ChargingSessionCompletedEvent for session {}: {}",
                     sessionId, ex.getMessage(), ex);
         }
 
-        // ❌ REMOVED: Direct service calls (old way)
+        // REMOVED: Direct service calls (old way)
         // try {
         //     paymentSettlementService.settlePaymentForCompletedSession(session, session.getCostTotal());
         // } catch (Exception e) {

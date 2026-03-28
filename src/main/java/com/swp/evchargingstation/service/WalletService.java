@@ -33,11 +33,11 @@ public class WalletService {
     private final WalletTransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
-    // ⚠️ EmailService: Keep for backward compatibility but prefer events
+    // EmailService: Keep for backward compatibility but prefer events
     // Email notifications should be sent via WalletEventListener (async)
     private final EmailService emailService;
 
-    // ✅ Spring Events: For wallet transaction notifications
+    // Spring Events: For wallet transaction notifications
     private final ApplicationEventPublisher eventPublisher;
 
     /**
@@ -134,10 +134,10 @@ public class WalletService {
 
         transaction = transactionRepository.save(transaction);
 
-        log.info("✅ Credited {} to wallet of user {}. New balance: {}",
+        log.info("Credited {} to wallet of user {}. New balance: {}",
                 amount, userId, wallet.getBalance());
 
-        // ===== ✅ PUBLISH EVENT FOR SIDE EFFECTS =====
+        // ===== PUBLISH EVENT FOR SIDE EFFECTS =====
         // Email notification và analytics được xử lý bởi WalletEventListener
         try {
             eventPublisher.publishEvent(

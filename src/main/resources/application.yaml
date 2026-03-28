@@ -8,33 +8,15 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB        # Giới hạn mỗi file tối đa 10MB
-      max-request-size: 50MB     # Giới hạn tổng request (3 ảnh + metadata)
-      file-size-threshold: 2KB   # Ngưỡng để lưu file vào disk thay vì memory
+      max-file-size: 10MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
 
   datasource:
-#     MySQL Configuration
-    url: jdbc:mysql://localhost:3306/railway
-    username: root
-    password: 123456
+    url: ${DB_URL:jdbc:mysql://localhost:3306/railway}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-    # SQL Server Configuration
-#    url: jdbc:sqlserver://localhost:1433;databaseName=temp1;encrypt=true;trustServerCertificate=true
-#    username: sa
-#    password: 12345
-#    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-
-    # MySQL Remote Configurations (Backup)
-#    url: jdbc:mysql://shinkansen.proxy.rlwy.net:33758/railway
-#    username: root
-#    password: vHfJPAeFUGvFYTaqGrsDTgwqAdgdzTri
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-
-#    url: jdbc:mysql://nozomi.proxy.rlwy.net:46167/railway
-#    username: root
-#    password: FQqcrInwdggCSHrdMVfIwWSutLRmMkqS
-#    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
@@ -43,7 +25,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-#        dialect: org.hibernate.dialect.SQLServerDialect
         format_sql: true
 
   springdoc:
@@ -57,8 +38,8 @@ spring:
       client:
         registration:
           google:
-            client-id: 102327400957-hik2prd0hkl8r94tfr2kfvbl1o12k33n.apps.googleusercontent.com
-            client-secret: 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
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: email,profile
             redirect-uri: "https://evchargingstation.khoahtd.id.vn/evchargingstation/login/oauth2/code/{registrationId}"
         provider:
@@ -69,14 +50,14 @@ spring:
             user-name-attribute: sub
 
 jwt:
-  singerKey: 0a58c8b134bc3d3e7a853dc8a49bcd3895e02c20d39d29d2d976e87300dc23fa
+  singerKey: ${JWT_SECRET}
 
 # Email Configuration
 mail:
   host: smtp.gmail.com
   port: 587
-  username: ${MAIL_USERNAME:khoahtd14@gmail.com}
-  password: ${MAIL_PASSWORD:ibpjhdtkgcudhapy}
+  username: ${MAIL_USERNAME}
+  password: ${MAIL_PASSWORD}
   properties:
     mail:
       smtp:
@@ -90,22 +71,15 @@ mail:
   from: ${MAIL_FROM:T-Green Charging System <khoahtd14@gmail.com>}
 
 zalopay:
-  app-id: "2554"  # Sandbox App ID
-  key1: "sdngKKJmqEMzvh5QQcdD2A9XBSKUNaYn"  # Sandbox Key1
-  key2: "trMrHtvjo6myautxDUiAcYsVtaeQ8nhf"  # Sandbox Key2
-  endpoint: "https://sb-openapi.zalopay.vn/v2/create"  # Sandbox
+  app-id: ${ZALOPAY_APP_ID}
+  key1: ${ZALOPAY_KEY1}
+  key2: ${ZALOPAY_KEY2}
+  endpoint: "https://sb-openapi.zalopay.vn/v2/create"
   callback-url: "https://evchargingstation.khoahtd.id.vn/evchargingstation/api/webhooks/zalopay/callback"
   redirect-url: "${app.base-url}/payment-result"
 
 # Cloudinary Configuration
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:dppc2tng8}
-  api-key: ${CLOUDINARY_API_KEY:223295131955916}
-  api-secret: ${CLOUDINARY_API_SECRET:1RF3CqXX5RECtSxkAxr5cO1G8KY}
-
-#logging:
-#  level:
-#    root: INFO
-#    com.swp.evchargingstation: INFO
-#    org.hibernate.SQL: WARN
-#    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
