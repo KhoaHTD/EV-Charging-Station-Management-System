@@ -50,7 +50,7 @@ Follow these steps to configure and run the project locally.
 ## 4. API Documentation
 We maintain an extensive, modular API documentation detailing all endpoints, authentication procedures, and expected request/response formats.
 
-👉 **[View the Full API Documentation](./docs/API_DOCUMENTATION.md)**
+**[View the Full API Documentation](./docs/API_DOCUMENTATION.md)**
 
 ### Interactive Testing with Swagger UI
 Once you have the application running locally, you can view and test the API visually via Swagger UI:
